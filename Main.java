@@ -3,7 +3,8 @@ import java.awt.event.*;
 
 public final class Main{
 
-	static final int FRAME_W = 800, FRAME_H = 600; // default window size
+	static final int FRAME_W = 800, FRAME_H = 600; // initial window size
+	static String dir = "/home/arne/pics";         // directory to look for files
 	
 	public static void main(String[] args){
 
@@ -15,9 +16,13 @@ public final class Main{
 			}
 		});
 
-		Canvas p = new Canvas();
+		Canvas p = new Canvas(dir);
 		f.add(p);
 
 		f.setVisible(true);
+	}
+
+	static void debug(String msg){
+		System.out.println(msg);	
 	}
 }
