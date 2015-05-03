@@ -1,8 +1,9 @@
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
-import javax.swing.*;
 import java.util.*;
+import javax.imageio.*;
+import javax.swing.*;
 
 // Canvas displays the photo list.
 final class Canvas extends JComponent {
@@ -22,7 +23,6 @@ final class Canvas extends JComponent {
 		hints.put(RenderingHints.KEY_RENDERING, 	    RenderingHints.VALUE_RENDER_QUALITY);
 
 		this.dir = new File(dir);
-		scan();
 	}
 
 	// Scan the current directory for photos
@@ -31,6 +31,7 @@ final class Canvas extends JComponent {
 		if (files == null) {
 			this.photos = new File[0];
 		} else {
+			Arrays.sort(files);
 			ArrayList<File> photos = new ArrayList<File>();
 			for (File f: files) {
 				String name = f.getName().toLowerCase();
@@ -43,6 +44,14 @@ final class Canvas extends JComponent {
 			this.photos = photos.toArray(this.photos);
 		}
 		Main.debug("scan "+ dir+": " + this.photos.length+ " photos");
+	}
+
+	void loadImg(int i) throws IOException {
+		if(photos.length == 0) {
+			this.image = null;
+			return;
+		}
+		this.image = ImageIO.read(photos[i]);
 	}
 
 	public void paintComponent(Graphics g_) {
