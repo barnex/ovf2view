@@ -5,17 +5,17 @@ import javax.swing.*;
 import java.util.*;
 
 // Canvas displays the photo list.
-final class Canvas extends JComponent{
+final class Canvas extends JComponent {
 
 	File dir = new File("");                                     // directory to scan
-	static String[] extensions = new String[]{".jpeg", ".jpg"};  // extensions recognized by scan
+	static String[] extensions = new String[] {".jpeg", ".jpg"}; // extensions recognized by scan
 	File[] photos = new File[0];                                 // scanned photos from dir
 	BufferedImage image;                                         // current photo
 	RenderingHints hints;                                        // quality settings
 
 	// New Canvas wit directory to scan
-	Canvas(String dir){
- 		hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,     RenderingHints.VALUE_ANTIALIAS_ON);
+	Canvas(String dir) {
+		hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,     RenderingHints.VALUE_ANTIALIAS_ON);
 		hints.put(RenderingHints.KEY_COLOR_RENDERING, 	RenderingHints.VALUE_COLOR_RENDER_QUALITY);
 		hints.put(RenderingHints.KEY_DITHERING, 	    RenderingHints.VALUE_DITHER_DISABLE);
 		hints.put(RenderingHints.KEY_INTERPOLATION,    RenderingHints.VALUE_INTERPOLATION_BICUBIC);
@@ -26,18 +26,22 @@ final class Canvas extends JComponent{
 	}
 
 	// Scan the current directory for photos
-	void scan(){
+	void scan() {
 		File[] files = dir.listFiles();
-		ArrayList<File> photos = new ArrayList<File>();
-		for (File f: files){
-			String name = f.getName().toLowerCase();	
-			for (String ext: extensions){
-				if (name.endsWith(ext)){
-					photos.add(f);	
-				}	
+		if (files == null) {
+			this.photos = new File[0];
+		} else {
+			ArrayList<File> photos = new ArrayList<File>();
+			for (File f: files) {
+				String name = f.getName().toLowerCase();
+				for (String ext: extensions) {
+					if (name.endsWith(ext)) {
+						photos.add(f);
+					}
+				}
 			}
+			this.photos = photos.toArray(this.photos);
 		}
-		this.photos = photos.toArray(this.photos);
 		Main.debug("scan "+ dir+": " + this.photos.length+ " photos");
 	}
 
