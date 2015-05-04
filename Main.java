@@ -19,7 +19,7 @@ public final class Main {
 
 		Canvas p = new Canvas(dir);
 		p.scan();
-		p.loadImg(0);
+		p.dispNext(0);
 
 		f.add(p);
 

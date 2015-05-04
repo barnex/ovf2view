@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.geom.*;
 import java.awt.image.*;
 import java.io.*;
@@ -12,7 +13,9 @@ final class Canvas extends JComponent {
 	File dir = new File("");                                     // directory to scan
 	static String[] extensions = new String[] {".jpeg", ".jpg"}; // extensions recognized by scan
 	File[] photos = new File[0];                                 // scanned photos from dir
+	int currentimg;                                              // currently displayed photo
 	BufferedImage image;                                         // current photo
+	Color background = Color.BLACK;                              // background color
 	AffineTransform transf = new AffineTransform();              // transform on current image
 	RenderingHints hints;                                        // quality settings
 
@@ -25,6 +28,8 @@ final class Canvas extends JComponent {
 		hints.put(RenderingHints.KEY_RENDERING, 	    RenderingHints.VALUE_RENDER_QUALITY);
 
 		this.dir = new File(dir);
+
+		initEvents();
 	}
 
 	// Scan the current directory for photos
@@ -46,14 +51,6 @@ final class Canvas extends JComponent {
 			this.photos = photos.toArray(this.photos);
 		}
 		Main.debug("scan "+ dir+": " + this.photos.length+ " photos");
-	}
-
-	void loadImg(int i) throws IOException {
-		if(photos.length == 0) {
-			image = null;
-			return;
-		}
-		this.image = ImageIO.read(photos[i]);
 	}
 
 	void zoomFit() {
@@ -78,8 +75,10 @@ final class Canvas extends JComponent {
 
 	public void paintComponent(Graphics g_) {
 
-		super.paintComponent(g_);
+		//super.paintComponent(g_);
 		Graphics2D g = (Graphics2D)(g_);
+		g.setColor(background);
+		g.fillRect(0, 0, getWidth(), getHeight());
 		g.setRenderingHints(hints);
 
 		zoomFit();
@@ -89,6 +88,46 @@ final class Canvas extends JComponent {
 		}
 
 	}
+
+	void dispNext(int delta) {
+		if(photos.length == 0) {
+			image = null;
+			return;
+		}
+		currentimg+=delta;
+		currentimg %= photos.length;
+		try {
+			this.image = ImageIO.read(photos[currentimg]);
+		} catch(IOException e) {
+			todo
+		}
+	}
+
+	void initEvents() {
+		getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "left");
+		getActionMap().put("left", new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				dispNext(-1);
+			}
+			private static final long serialVersionUID = 1; // sigh...
+		});
+
+		getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "right");
+		getActionMap().put("right", new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				dispNext(1);
+			}
+			private static final long serialVersionUID = 1;
+		});
+
+		addMouseListener(new MouseAdapter() {
+
+		});
+		addMouseMotionListener(new MouseMotionAdapter() {
+
+		});
+	}
+
 
 	private static final long serialVersionUID = 1;
 }
