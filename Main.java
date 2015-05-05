@@ -1,4 +1,3 @@
-import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
 
@@ -22,8 +21,8 @@ public final class Main {
 		if (args.length > 0) {
 			dir = args[0];
 		}
-		Canvas p = new Canvas(dir);
-		p.scan();
+		Canvas p = new Canvas();
+		p.scan(new File(dir));
 		//p.dispNext(0);
 
 		f.add(p);

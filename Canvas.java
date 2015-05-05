@@ -11,7 +11,6 @@ import javax.swing.*;
 final class Canvas extends JComponent {
 
 	static String[] extensions = new String[] {".jpeg", ".jpg"}; // extensions recognized by scan
-	File dir = new File("");                                     // directory to scan
 	File[] photos = new File[0];                                 // scanned photos from dir
 
 	//int currentimg;                                              // currently displayed photo
@@ -21,20 +20,19 @@ final class Canvas extends JComponent {
 	Color background = Color.BLACK;                              // background color
 	RenderingHints hints;                                        // quality settings
 
-	// New Canvas wit directory to scan
-	Canvas(String dir) {
-		hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,     RenderingHints.VALUE_ANTIALIAS_ON);
-		hints.put(RenderingHints.KEY_COLOR_RENDERING, 	RenderingHints.VALUE_COLOR_RENDER_QUALITY);
-		hints.put(RenderingHints.KEY_DITHERING, 	    RenderingHints.VALUE_DITHER_DISABLE);
-		hints.put(RenderingHints.KEY_INTERPOLATION,    RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-		hints.put(RenderingHints.KEY_RENDERING, 	    RenderingHints.VALUE_RENDER_QUALITY);
+	// New Canvas with directory to scan
+	Canvas() {
+		hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		hints.put(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+		hints.put(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
+		hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+		hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-		this.dir = new File(dir);
 		initEvents();
 	}
 
-	// Scan the current directory for photos
-	void scan() {
+	// Scans dir for photos
+	void scan(File dir) {
 		File[] files = dir.listFiles();
 		if (files == null) {
 			this.photos = new File[0];
@@ -83,11 +81,16 @@ final class Canvas extends JComponent {
 		int W = getWidth();
 		int H = getHeight();
 
+		// reset graphics
 		Graphics2D g = (Graphics2D)(g_);
+		g.setClip(0, 0, W, H);
+
+		// clear background
 		g.setColor(background);
 		g.fillRect(0, 0, W, H);
 		g.setRenderingHints(hints);
 
+		// divide in grid nx * ny
 		int nx = W / thumbsize;
 		int ny = H / thumbsize;
 		if (nx == 0) {
@@ -97,16 +100,20 @@ final class Canvas extends JComponent {
 			ny = 1;
 		}
 
+		// center grid in frame
 		int stridex = W / nx;
 		int stridey = H / ny;
 		int offx = (stridex - thumbsize) / 2;
 		int offy = (stridey - thumbsize) / 2;
 
-		g.setColor(Color.BLUE);
 		for (int i=0; i<nx; i++) {
 			for(int j=0; j<ny; j++) {
 				int photo = j*nx+i;
-				paintThumb(g, photo, i*W/nx+offx, j*H/ny+offy);
+				int x = i*W/nx+offx;
+				int y = j*H/ny+offy;
+				g.setTransform(AffineTransform.getTranslateInstance(x, y));
+				g.setClip(0, 0, thumbsize, thumbsize);
+				paintThumb(g, photo);
 			}
 		}
 
@@ -117,9 +124,9 @@ final class Canvas extends JComponent {
 
 	}
 
-	void paintThumb(Graphics2D g, int photo, int offx, int offy) {
-		g.setClip(offx, offy, thumbsize, thumbsize);
+	void paintThumb(Graphics2D g, int photo) {
 
+		//BufferedImage image = loadImg(photo);
 		BufferedImage image = loadImg(photo);
 		double w = (double)(thumbsize);          // canvas size
 		double h = (double)(thumbsize);
@@ -130,14 +137,13 @@ final class Canvas extends JComponent {
 		double zy = h / imh;
 		double zoom = (zx < zy? zx: zy);
 
-		//double tx = (w - imw*zoom)/2;             // translate to center
-		//double ty = (h - imh*zoom)/2;
-		AffineTransform transf = new AffineTransform();
-		//transf.translate(tx, ty);
-		//transf.setToScale(zoom, zoom);
+		double tx = (w - imw*zoom)/2;             // translate to center
+		double ty = (h - imh*zoom)/2;
+		AffineTransform transf = g.getTransform();
+		transf.translate(tx, ty);
+		transf.scale(zoom, zoom);
 		g.setTransform(transf);
-
-		g.drawImage(image, (int)((double)(offx)), (int)((double)(offy)), null);
+		g.drawImage(image, 0, 0,   null);
 	}
 
 	BufferedImage loadImg(int index) {
