@@ -5,11 +5,11 @@ import javax.swing.*;
 public final class Main {
 
 	static final int FRAME_W = 800, FRAME_H = 600; // initial window size
-	static String dir = "/home/arne/pics";         // directory to look for files
 
 	public static void main(String[] args) throws IOException {
 
 		final JFrame f = new JFrame();
+		f.setFocusable(true);
 		f.setSize(FRAME_W, FRAME_H);
 		f.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -17,9 +17,14 @@ public final class Main {
 			}
 		});
 
+
+		String dir = ".";
+		if (args.length > 0) {
+			dir = args[0];
+		}
 		Canvas p = new Canvas(dir);
 		p.scan();
-		p.dispNext(0);
+		//p.dispNext(0);
 
 		f.add(p);
 

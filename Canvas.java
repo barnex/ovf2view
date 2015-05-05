@@ -10,13 +10,15 @@ import javax.swing.*;
 // Canvas displays the photo list.
 final class Canvas extends JComponent {
 
-	File dir = new File("");                                     // directory to scan
 	static String[] extensions = new String[] {".jpeg", ".jpg"}; // extensions recognized by scan
+	File dir = new File("");                                     // directory to scan
 	File[] photos = new File[0];                                 // scanned photos from dir
-	int currentimg;                                              // currently displayed photo
-	BufferedImage image;                                         // current photo
+
+	//int currentimg;                                              // currently displayed photo
+	//BufferedImage image;                                         // current photo
+	//AffineTransform transf = new AffineTransform();              // transform on current image
+
 	Color background = Color.BLACK;                              // background color
-	AffineTransform transf = new AffineTransform();              // transform on current image
 	RenderingHints hints;                                        // quality settings
 
 	// New Canvas wit directory to scan
@@ -28,7 +30,6 @@ final class Canvas extends JComponent {
 		hints.put(RenderingHints.KEY_RENDERING, 	    RenderingHints.VALUE_RENDER_QUALITY);
 
 		this.dir = new File(dir);
-
 		initEvents();
 	}
 
@@ -53,79 +54,171 @@ final class Canvas extends JComponent {
 		Main.debug("scan "+ dir+": " + this.photos.length+ " photos");
 	}
 
-	void zoomFit() {
-		if (image == null) {
-			return;
+	//void zoomFit() {
+	//	if (image == null) {
+	//		return;
+	//	}
+
+	//	double w = (double)(getWidth());          // canvas size
+	//	double h = (double)(getHeight());
+	//	double imw = (double)(image.getWidth());  // image size
+	//	double imh = (double)(image.getHeight());
+
+	//	double zx = w / imw;                      // zoom to fit
+	//	double zy =  h /imh;
+	//	double zoom = (zx < zy? zx: zy);
+	//	transf.setToScale(zoom, zoom);
+
+	//	double tx = (w/zoom - imw)/2;             // translate to center
+	//	double ty = (h/zoom - imh)/2;
+	//	transf.translate(tx, ty);
+	//}
+
+
+	int thumbsize = 256;
+	int border = 1;
+	static final int MIN_THUMB_SIZE = 32;
+
+	public void paintComponent(Graphics g_) {
+		int W = getWidth();
+		int H = getHeight();
+
+		Graphics2D g = (Graphics2D)(g_);
+		g.setColor(background);
+		g.fillRect(0, 0, W, H);
+		g.setRenderingHints(hints);
+
+		int nx = W / thumbsize;
+		int ny = H / thumbsize;
+		if (nx == 0) {
+			nx = 1;
+		}
+		if (ny == 0) {
+			ny = 1;
 		}
 
-		double w = (double)(getWidth());          // canvas size
-		double h = (double)(getHeight());
+		int stridex = W / nx;
+		int stridey = H / ny;
+		int offx = (stridex - thumbsize) / 2;
+		int offy = (stridey - thumbsize) / 2;
+
+		g.setColor(Color.BLUE);
+		for (int i=0; i<nx; i++) {
+			for(int j=0; j<ny; j++) {
+				int photo = j*nx+i;
+				paintThumb(g, photo, i*W/nx+offx, j*H/ny+offy);
+			}
+		}
+
+		//zoomFit();
+		//if (this.image != null) {
+		//	g.drawImage(this.image, transf, null);
+		//}
+
+	}
+
+	void paintThumb(Graphics2D g, int photo, int offx, int offy) {
+		g.setClip(offx, offy, thumbsize, thumbsize);
+
+		BufferedImage image = loadImg(photo);
+		double w = (double)(thumbsize);          // canvas size
+		double h = (double)(thumbsize);
 		double imw = (double)(image.getWidth());  // image size
 		double imh = (double)(image.getHeight());
 
 		double zx = w / imw;                      // zoom to fit
-		double zy =  h /imh;
+		double zy = h / imh;
 		double zoom = (zx < zy? zx: zy);
-		transf.setToScale(zoom, zoom);
 
-		double tx = (w/zoom - imw)/2;             // translate to center
-		double ty = (h/zoom - imh)/2;
-		transf.translate(tx, ty);
+		//double tx = (w - imw*zoom)/2;             // translate to center
+		//double ty = (h - imh*zoom)/2;
+		AffineTransform transf = new AffineTransform();
+		//transf.translate(tx, ty);
+		//transf.setToScale(zoom, zoom);
+		g.setTransform(transf);
+
+		g.drawImage(image, (int)((double)(offx)), (int)((double)(offy)), null);
 	}
 
-	public void paintComponent(Graphics g_) {
-
-		//super.paintComponent(g_);
-		Graphics2D g = (Graphics2D)(g_);
-		g.setColor(background);
-		g.fillRect(0, 0, getWidth(), getHeight());
-		g.setRenderingHints(hints);
-
-		zoomFit();
-
-		if (this.image != null) {
-			g.drawImage(this.image, transf, null);
+	BufferedImage loadImg(int index) {
+		if(index < 0 || index >= photos.length) {
+			Main.debug("index "+index+" out of bounds");
+			return brokenImage();
 		}
-
-	}
-
-	void dispNext(int delta) {
-		if(photos.length == 0) {
-			image = null;
-			return;
-		}
-		currentimg+=delta;
-		currentimg %= photos.length;
 		try {
-			this.image = ImageIO.read(photos[currentimg]);
+			Main.debug("load "+photos[index]);
+			return ImageIO.read(photos[index]);
 		} catch(IOException e) {
-			todo
+			Main.debug(e.toString());
+			return brokenImage();
 		}
 	}
+
+	BufferedImage _brokenImage;
+	static final int BROKEN_SIZE = 256;
+	BufferedImage brokenImage() {
+		if (_brokenImage != null) {
+			return _brokenImage;
+		}
+		_brokenImage = new BufferedImage(BROKEN_SIZE, BROKEN_SIZE, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = (Graphics2D)(_brokenImage.getGraphics());
+		g.setColor(Color.RED);
+		g.drawLine(0, 0, BROKEN_SIZE, BROKEN_SIZE);
+		g.drawLine(0, BROKEN_SIZE, BROKEN_SIZE, 0);
+		return _brokenImage;
+	}
+
+//void dispNext(int delta) {
+//	if(photos.length == 0) {
+//		image = null;
+//		return;
+//	}
+//	currentimg+=delta;
+//	while(currentimg < 0) {
+//		currentimg += photos.length;
+//	}
+//	while(currentimg >= photos.length) {
+//		currentimg -= photos.length;
+//	}
+
+//	disp(photos[currentimg]);
+//}
+
+//void disp(File photo) {
+//	Main.debug("loading: " + photo);
+//	try {
+//		this.image = ImageIO.read(photo);
+//	} catch(IOException e) {
+//		throw new IllegalArgumentException(e);//TODO
+//	}
+//	repaint();
+//}
 
 	void initEvents() {
-		getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "left");
-		getActionMap().put("left", new AbstractAction() {
-			public void actionPerformed(ActionEvent e) {
-				dispNext(-1);
-			}
-			private static final long serialVersionUID = 1; // sigh...
-		});
+		//getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "left");
+		//getActionMap().put("left", new AbstractAction() {
+		//	public void actionPerformed(ActionEvent e) {
+		//		dispNext(-1);
+		//	}
+		//	private static final long serialVersionUID = 1; // sigh...
+		//});
 
-		getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "right");
-		getActionMap().put("right", new AbstractAction() {
-			public void actionPerformed(ActionEvent e) {
-				dispNext(1);
-			}
-			private static final long serialVersionUID = 1;
-		});
+		//getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "right");
+		//getActionMap().put("right", new AbstractAction() {
+		//	public void actionPerformed(ActionEvent e) {
+		//		dispNext(1);
+		//	}
+		//	private static final long serialVersionUID = 1;
+		//});
 
-		addMouseListener(new MouseAdapter() {
+		//getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "right");
 
-		});
-		addMouseMotionListener(new MouseMotionAdapter() {
+		//addMouseListener(new MouseAdapter() {
 
-		});
+		//});
+		//addMouseMotionListener(new MouseMotionAdapter() {
+
+		//});
 	}
 
 
