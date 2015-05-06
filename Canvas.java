@@ -23,7 +23,7 @@ final class Canvas extends JComponent {
 		hints.put(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
 		hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 		hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		photos = new Cache();
+		photos = new Cache(this);
 		initEvents();
 	}
 
@@ -85,11 +85,13 @@ final class Canvas extends JComponent {
 
 
 	int repaintCount;
+	Timer paintTimer = new Timer();
+
 	public void paintComponent(Graphics g_) {
 		repaintCount++;
+		Main.debug("start repaint #" + repaintCount);
 		sizesChanged();  // repaint may be called before resize event...
 
-		Main.debug("repaint #" + repaintCount);
 		// reset graphics
 		Graphics2D g = (Graphics2D)(g_);
 		g.setClip(0, 0, W, H);
@@ -120,6 +122,8 @@ final class Canvas extends JComponent {
 			}
 		}
 
+		Main.debug("done repaint #" + repaintCount);
+
 		//zoomFit();
 		//if (this.image != null) {
 		//	g.drawImage(this.image, transf, null);
@@ -129,7 +133,6 @@ final class Canvas extends JComponent {
 
 	void paintThumb(Graphics2D g, int photo) {
 
-		//BufferedImage image = loadImg(photo);
 		BufferedImage image = photos.get(photo);
 		double w = (double)(thumbsize);          // canvas size
 		double h = (double)(thumbsize);

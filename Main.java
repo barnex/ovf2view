@@ -24,6 +24,9 @@ public final class Main {
 		}
 		Canvas p = new Canvas();
 		p.photos.scan(new File(dir));
+
+		new Thread(p.photos).start();
+
 		//p.dispNext(0);
 
 		f.add(p);

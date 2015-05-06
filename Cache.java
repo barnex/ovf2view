@@ -2,21 +2,52 @@ import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 import javax.imageio.*;
 
 // Cache provides transparently cached access to the photo collection.
-public final class Cache {
+public final class Cache implements Runnable {
 
 	static String[] extensions = new String[] {".jpeg", ".jpg"}; // extensions recognized by scan
 	File[] photos = new File[0];                                 // scanned photos from dir
 	BufferedImage[] cache;
+	ArrayBlockingQueue<Integer> requests = new ArrayBlockingQueue<Integer>(20);
+	Canvas canvas;
+
+	Cache(Canvas c) {
+		canvas = c;
+	}
+
+	public void run() {
+		for(;;) {
+			try {
+				int index = requests.take().intValue();
+				boolean need;
+				synchronized(this) {
+					need = cache[index] == null;
+				}
+				if (need) {
+					Main.debug("load "+photos[index]);
+					BufferedImage img = ImageIO.read(photos[index]);
+					synchronized(this) {
+						cache[index] = img;
+					}
+					canvas.repaint();
+				}
+			} catch(IOException e) {
+				Main.debug(e.toString());
+			} catch(InterruptedException e) {
+				Main.debug(e.toString());
+			}
+		}
+	}
 
 	// total number of available photos
 	int len() {
 		return photos.length;
 	}
 
-	BufferedImage get(int index) {
+	synchronized BufferedImage get(int index) {
 		if(index < 0 || index >= photos.length) {
 			Main.debug("index "+index+" out of bounds");
 			return brokenImage();
@@ -24,17 +55,19 @@ public final class Cache {
 
 		if(cache[index] != null) {
 			return cache[index];
-		}
-
-		try {
-			Main.debug("load "+photos[index]);
-			cache[index] = ImageIO.read(photos[index]);
-			return cache[index];
-		} catch(IOException e) {
-			Main.debug(e.toString());
-			return brokenImage();
+		} else {
+			//try {
+			Main.debug("requesting photo #"+index);
+			boolean ok = requests.offer(new Integer(index));
+			Main.debug("requesting photo #"+index+":OK="+ok);
+			//} catch(InterruptedException e) {
+			//	Main.debug(e.toString());
+			//}
+			return loadingImage();
 		}
 	}
+
+
 
 	// Scans dir for photos
 	void scan(File dir) {
@@ -71,5 +104,9 @@ public final class Cache {
 		g.drawLine(0, 0, BROKEN_SIZE, BROKEN_SIZE);
 		g.drawLine(0, BROKEN_SIZE, BROKEN_SIZE, 0);
 		return _brokenImage;
+	}
+
+	BufferedImage loadingImage() {
+		return brokenImage();//TODO
 	}
 }
