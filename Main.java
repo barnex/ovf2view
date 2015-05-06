@@ -23,7 +23,7 @@ public final class Main {
 			dir = args[0];
 		}
 		Canvas p = new Canvas();
-		p.scan(new File(dir));
+		p.photos.scan(new File(dir));
 		//p.dispNext(0);
 
 		f.add(p);
