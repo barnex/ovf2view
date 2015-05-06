@@ -32,7 +32,7 @@ public final class Cache implements Runnable {
 					synchronized(this) {
 						cache[index] = img;
 					}
-					canvas.repaint();
+					canvas.repaint(); // TODO: repaint only if available image visible
 				}
 			} catch(IOException e) {
 				Main.debug(e.toString());
