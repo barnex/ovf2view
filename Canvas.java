@@ -17,7 +17,9 @@ final class Canvas extends JComponent {
 	//BufferedImage image;                                         // current photo
 	//AffineTransform transf = new AffineTransform();              // transform on current image
 
-	Color background = Color.BLACK;                              // background color
+	int W, H;                                                    // canvas size
+	int nx, ny;
+	Color background = Color.DARK_GRAY;                           // background color
 	RenderingHints hints;                                        // quality settings
 
 	// New Canvas with directory to scan
@@ -77,10 +79,70 @@ final class Canvas extends JComponent {
 	int border = 1;
 	static final int MIN_THUMB_SIZE = 32;
 
-	public void paintComponent(Graphics g_) {
-		int W = getWidth();
-		int H = getHeight();
+	void zoom(int delta) {
+		if(delta > 0) {
+			thumbsize /= 2;
+		}
+		if(delta < 0) {
+			thumbsize *= 2;
+		}
+		if(thumbsize < MIN_THUMB_SIZE) {
+			thumbsize = MIN_THUMB_SIZE;
+		}
+		thumbsize = min(thumbsize, W, H);
+		sizesChanged();
+		repaint();
+	}
 
+	int scrollPos;
+
+	void scroll(int delta) {
+		if(photos.length == 0 || nx == 0) {
+			return;
+		}
+
+		// scroll one row
+		scrollPos += delta * nx;
+		// don't scroll out of bounds
+		if (scrollPos < 0) {
+			scrollPos = 0;
+		}
+		if(scrollPos >= photos.length) {
+			scrollPos = photos.length - 1;
+		}
+		Main.debug("scrollpos:"+ scrollPos);
+		repaint();
+	}
+
+	int getScrollLine() {
+		if (nx == 0) {
+			return 0;
+		}
+		return scrollPos / nx;
+	}
+
+	void sizesChanged() {
+		W = getWidth();
+		H = getHeight();
+
+		// divide in grid nx * ny
+		nx = W / thumbsize;
+		ny = H / thumbsize;
+		if (nx == 0) {
+			nx = 1;
+		}
+		if (ny == 0) {
+			ny = 1;
+		}
+	}
+
+
+	int repaintCount;
+	public void paintComponent(Graphics g_) {
+		repaintCount++;
+		sizesChanged();  // repaint may be called before resize event...
+
+		Main.debug("repaint #" + repaintCount);
 		// reset graphics
 		Graphics2D g = (Graphics2D)(g_);
 		g.setClip(0, 0, W, H);
@@ -90,15 +152,6 @@ final class Canvas extends JComponent {
 		g.fillRect(0, 0, W, H);
 		g.setRenderingHints(hints);
 
-		// divide in grid nx * ny
-		int nx = W / thumbsize;
-		int ny = H / thumbsize;
-		if (nx == 0) {
-			nx = 1;
-		}
-		if (ny == 0) {
-			ny = 1;
-		}
 
 		// center grid in frame
 		int stridex = W / nx;
@@ -108,7 +161,10 @@ final class Canvas extends JComponent {
 
 		for (int i=0; i<nx; i++) {
 			for(int j=0; j<ny; j++) {
-				int photo = j*nx+i;
+				int photo = (j+getScrollLine())*nx+i;
+				if(photo >= photos.length) {
+					continue;
+				}
 				int x = i*W/nx+offx;
 				int y = j*H/ny+offy;
 				g.setTransform(AffineTransform.getTranslateInstance(x, y));
@@ -219,14 +275,39 @@ final class Canvas extends JComponent {
 
 		//getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "right");
 
-		//addMouseListener(new MouseAdapter() {
+		addMouseListener(new MouseAdapter() {
 
-		//});
-		//addMouseMotionListener(new MouseMotionAdapter() {
+		});
+		addMouseMotionListener(new MouseMotionAdapter() {
 
-		//});
+		});
+		addMouseWheelListener(new MouseWheelListener() {
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				if((e.getModifiers() == InputEvent.CTRL_MASK)) {
+					zoom(e.getWheelRotation());
+				}
+				if((e.getModifiers() == 0)) {
+					scroll(e.getWheelRotation());
+				}
+			}
+		});
+		addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				sizesChanged();
+			}
+		});
 	}
 
+	int min(int a, int b, int c) {
+		return min(a, min(b, c));
+	}
+	int min(int a, int b) {
+		if (a<b) {
+			return a;
+		} else {
+			return b;
+		}
+	}
 
 	private static final long serialVersionUID = 1;
 }
