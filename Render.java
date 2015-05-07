@@ -10,7 +10,7 @@ public final class Render {
 	}
 
 
-	BufferedImage scale(BufferedImage src, int w, int h) {
+	static BufferedImage scale(BufferedImage src, int w, int h) {
 		double zx = (double)(w) / (double)(src.getWidth());
 		double zy = (double)(h) / (double)(src.getHeight());
 		double zoom = (zx < zy? zx: zy);
@@ -22,6 +22,7 @@ public final class Render {
 		BufferedImage dst = new BufferedImage(newW, newH, BufferedImage.TYPE_3BYTE_BGR);
 
 		Graphics2D g = (Graphics2D)(dst.getGraphics());
+		g.setRenderingHints(hints);
 		g.setTransform(transf);
 		g.drawImage(src, 0, 0, null);
 		return dst;

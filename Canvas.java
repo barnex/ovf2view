@@ -9,7 +9,7 @@ import javax.swing.*;
 final class Canvas extends JComponent {
 
 	int thumbsize = 256;
-	int border = 1;
+	int border = 10;
 	static final int MIN_THUMB_SIZE = 32;
 	int W, H;                             // canvas size
 
@@ -77,7 +77,7 @@ final class Canvas extends JComponent {
 
 	// grid size x
 	int nx() {
-		int nx = W / thumbsize;
+		int nx = W / (thumbsize+2*border);
 		if (nx == 0) {
 			nx = 1;
 		}
@@ -87,7 +87,7 @@ final class Canvas extends JComponent {
 
 	// grid size x
 	int ny() {
-		int ny = H / thumbsize;
+		int ny = H / (thumbsize+2*border);
 		if (ny == 0) {
 			ny = 1;
 		}
@@ -121,8 +121,8 @@ final class Canvas extends JComponent {
 		// center grid in frame
 		int stridex = W / nx();
 		int stridey = H / ny();
-		int offx = (stridex - thumbsize) / 2;
-		int offy = (stridey - thumbsize) / 2;
+		int offx = (stridex - (thumbsize+border)) / 2;
+		int offy = (stridey - (thumbsize+border)) / 2;
 
 		for (int i=0; i<nx(); i++) {
 			for(int j=0; j<ny(); j++) {
@@ -133,7 +133,7 @@ final class Canvas extends JComponent {
 				int x = i*W/nx()+offx;
 				int y = j*H/ny()+offy;
 				g.setTransform(AffineTransform.getTranslateInstance(x, y));
-				g.setClip(0, 0, thumbsize, thumbsize);
+				//g.setClip(0, 0, thumbsize, thumbsize);
 				paintThumb(g, image);
 			}
 		}

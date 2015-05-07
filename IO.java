@@ -32,8 +32,8 @@ public final class IO {
 	static BufferedImage load(File file) {
 		Main.debug("thread " + Thread.currentThread().getId()+" loading "+file);
 		try {
-			return ImageIO.read(file);
-		} catch(IOException e) {
+			return Render.scale(ImageIO.read(file), 256, 256);
+		} catch(Exception e) {
 			Main.debug(e.toString());
 			return brokenImage();
 		}
@@ -45,11 +45,10 @@ public final class IO {
 		if (_brokenImage != null) {
 			return _brokenImage;
 		}
-		_brokenImage = new BufferedImage(BROKEN_SIZE, BROKEN_SIZE, BufferedImage.TYPE_INT_RGB);
+		_brokenImage = new BufferedImage(BROKEN_SIZE, BROKEN_SIZE, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = (Graphics2D)(_brokenImage.getGraphics());
-		g.setColor(Color.RED);
-		g.drawLine(0, 0, BROKEN_SIZE, BROKEN_SIZE);
-		g.drawLine(0, BROKEN_SIZE, BROKEN_SIZE, 0);
+		g.setColor(Color.WHITE);
+		g.drawRect(10, 10, BROKEN_SIZE-20, BROKEN_SIZE-20);
 		return _brokenImage;
 	}
 
