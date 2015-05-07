@@ -2,6 +2,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
 import java.awt.image.*;
+import java.io.*;
 import javax.swing.*;
 
 // Canvas displays the image list.
@@ -11,20 +12,20 @@ final class Canvas extends JComponent {
 	int border = 1;
 	static final int MIN_THUMB_SIZE = 32;
 	int W, H;                             // canvas size
-	int nx, ny;                           // thumbnail grid size
+
 	Color background = Color.DARK_GRAY;   // background color
-	RenderingHints hints;                 // quality settings
-	Cache images;
+
+	File[] files = new File[0];
+	Cache cache;
 
 	// New Canvas with directory to scan
 	Canvas() {
-		hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		hints.put(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
-		hints.put(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
-		hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-		hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		images = new Cache(this);
+		cache = new Cache(this);
 		initEvents();
+	}
+
+	void scan(File dir) {
+		files = IO.scan(dir);
 	}
 
 	void zoom(int delta) {
@@ -45,42 +46,57 @@ final class Canvas extends JComponent {
 	int scrollPos;
 
 	void scroll(int delta) {
-		if(images.len() == 0 || nx == 0) {
+		if(nImg() == 0 || ny() == 0) {
 			return;
 		}
 
 		// scroll one row
-		scrollPos += delta * nx;
+		scrollPos += delta * nx();
 		// don't scroll out of bounds
 		if (scrollPos < 0) {
 			scrollPos = 0;
 		}
-		if(scrollPos >= images.len()) {
-			scrollPos = images.len() - 1;
+		if(scrollPos >= nImg()) {
+			scrollPos = nImg() - 1;
 		}
 		repaint();
 	}
 
 	int getScrollLine() {
-		if (nx == 0) {
+		if (nx() == 0) {
 			return 0;
 		}
-		return scrollPos / nx;
+		return scrollPos / nx();
 	}
 
 	void sizesChanged() {
 		W = getWidth();
 		H = getHeight();
 
-		// divide in grid nx * ny
-		nx = W / thumbsize;
-		ny = H / thumbsize;
+	}
+
+	// grid size x
+	int nx() {
+		int nx = W / thumbsize;
 		if (nx == 0) {
 			nx = 1;
 		}
+		return nx;
+	}
+
+
+	// grid size x
+	int ny() {
+		int ny = H / thumbsize;
 		if (ny == 0) {
 			ny = 1;
 		}
+		return ny;
+	}
+
+	// total number of images in library
+	int nImg() {
+		return files.length;
 	}
 
 
@@ -99,23 +115,23 @@ final class Canvas extends JComponent {
 		// clear background
 		g.setColor(background);
 		g.fillRect(0, 0, W, H);
-		g.setRenderingHints(hints);
+		g.setRenderingHints(Render.hints);
 
 
 		// center grid in frame
-		int stridex = W / nx;
-		int stridey = H / ny;
+		int stridex = W / nx();
+		int stridey = H / ny();
 		int offx = (stridex - thumbsize) / 2;
 		int offy = (stridey - thumbsize) / 2;
 
-		for (int i=0; i<nx; i++) {
-			for(int j=0; j<ny; j++) {
-				int image = (j+getScrollLine())*nx+i;
-				if(image >= images.len()) {
+		for (int i=0; i<nx(); i++) {
+			for(int j=0; j<ny(); j++) {
+				int image = (j+getScrollLine())*nx()+i;
+				if(image >= nImg()) {
 					continue;
 				}
-				int x = i*W/nx+offx;
-				int y = j*H/ny+offy;
+				int x = i*W/nx()+offx;
+				int y = j*H/ny()+offy;
 				g.setTransform(AffineTransform.getTranslateInstance(x, y));
 				g.setClip(0, 0, thumbsize, thumbsize);
 				paintThumb(g, image);
@@ -140,8 +156,7 @@ final class Canvas extends JComponent {
 	}
 
 	void paintThumb(Graphics2D g, int index) {
-
-		BufferedImage image = images.get(index);
+		BufferedImage image = cache.get(index);
 		double w = (double)(thumbsize);          // canvas size
 		double h = (double)(thumbsize);
 		double imw = (double)(image.getWidth());  // image size

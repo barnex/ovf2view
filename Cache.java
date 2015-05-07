@@ -1,20 +1,20 @@
 import java.awt.image.*;
-import java.io.*;
-import java.util.*;
 import java.util.concurrent.*;
 
 // Cache provides transparently cached access to the image collection.
 public final class Cache implements Runnable {
 
-	static String[] extensions = new String[] {".jpeg", ".jpg"}; // extensions recognized by scan
-	File[] images = new File[0];                                 // scanned images from dir
+	static final int N_THREADS = 4;                                            // number of worker threads
 	BufferedImage[] cache;
 	ArrayBlockingQueue<Integer> requests = new ArrayBlockingQueue<Integer>(20);
 	Canvas canvas;
+	boolean started;
 
 	Cache(Canvas c) {
 		canvas = c;
+
 	}
+
 
 	public void run() {
 		for(;;) {
@@ -25,7 +25,7 @@ public final class Cache implements Runnable {
 					need = cache[index] == null;
 				}
 				if (need) {
-					BufferedImage img = IO.load(images[index]);
+					BufferedImage img = IO.load(canvas.files[index]);
 					synchronized(this) {
 						cache[index] = img;
 					}
@@ -39,13 +39,19 @@ public final class Cache implements Runnable {
 
 	// total number of available images
 	int len() {
-		return images.length;
+		return canvas.files.length;
 	}
 
 	synchronized BufferedImage get(int index) {
-		if(index < 0 || index >= images.length) {
+		assureStarted();
+		if(index < 0 || index >= canvas.files.length) {
 			Main.debug("index "+index+" out of bounds");
 			return IO.brokenImage();
+		}
+
+		// TODO: proper init
+		if(cache == null || cache.length != canvas.files.length) {
+			cache = new BufferedImage[canvas.files.length];
 		}
 
 		if(cache[index] != null) {
@@ -62,29 +68,17 @@ public final class Cache implements Runnable {
 		}
 	}
 
-
-
-	// Scans dir for images
-	void scan(File dir) {
-		File[] files = dir.listFiles();
-		if (files == null) {
-			this.images = new File[0];
-		} else {
-			Arrays.sort(files);
-			ArrayList<File> images = new ArrayList<File>();
-			for (File f: files) {
-				String name = f.getName().toLowerCase();
-				for (String ext: extensions) {
-					if (name.endsWith(ext)) {
-						images.add(f);
-					}
-				}
-			}
-			this.images = images.toArray(this.images);
+	synchronized void assureStarted() {
+		if (started) {
+			return;
 		}
-		cache = new BufferedImage[images.length];
-		Main.debug("scan "+ dir+": " + this.images.length+ " images");
+		started = true;
+		Main.debug("starting " + N_THREADS + " worker threads");
+		for (int i=0; i<N_THREADS; i++) {
+			Thread d = new Thread(this);
+			d.setDaemon(true);
+			d.start();
+		}
 	}
-
 
 }

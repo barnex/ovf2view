@@ -1,12 +1,36 @@
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
+import java.util.*;
 import javax.imageio.*;
 
 public final class IO {
 
+	static String[] extensions = new String[] {".jpeg", ".jpg"}; // extensions recognized by scan
+
+	// Scans dir for images
+	static File[] scan(File dir) {
+		File[] files = dir.listFiles();
+		if (files == null) {
+			return new File[0];
+		} else {
+			Arrays.sort(files);
+			ArrayList<File> images = new ArrayList<File>();
+			for (File f: files) {
+				String name = f.getName().toLowerCase();
+				for (String ext: extensions) {
+					if (name.endsWith(ext)) {
+						images.add(f);
+					}
+				}
+			}
+			return images.toArray(new File[0]);
+		}
+	}
+
+
 	static BufferedImage load(File file) {
-		Main.debug("load "+file);
+		Main.debug("thread " + Thread.currentThread().getId()+" loading "+file);
 		try {
 			return ImageIO.read(file);
 		} catch(IOException e) {

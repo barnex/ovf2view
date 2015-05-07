@@ -23,9 +23,7 @@ public final class Main {
 			dir = args[0];
 		}
 		Canvas p = new Canvas();
-		p.images.scan(new File(dir));
-
-		new Thread(p.images).start();
+		p.scan(new File(dir));
 
 		//p.dispNext(0);
 
@@ -33,6 +31,7 @@ public final class Main {
 
 		f.setVisible(true);
 	}
+
 
 	static void debug(String msg) {
 		System.out.println(msg);
