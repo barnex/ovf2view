@@ -1,9 +1,7 @@
-import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
-import javax.imageio.*;
 
 // Cache provides transparently cached access to the image collection.
 public final class Cache implements Runnable {
@@ -27,15 +25,12 @@ public final class Cache implements Runnable {
 					need = cache[index] == null;
 				}
 				if (need) {
-					Main.debug("load "+images[index]);
-					BufferedImage img = ImageIO.read(images[index]);
+					BufferedImage img = IO.load(images[index]);
 					synchronized(this) {
 						cache[index] = img;
 					}
 					canvas.repaint(); // TODO: repaint only if available image visible
 				}
-			} catch(IOException e) {
-				Main.debug(e.toString());
 			} catch(InterruptedException e) {
 				Main.debug(e.toString());
 			}
@@ -50,7 +45,7 @@ public final class Cache implements Runnable {
 	synchronized BufferedImage get(int index) {
 		if(index < 0 || index >= images.length) {
 			Main.debug("index "+index+" out of bounds");
-			return brokenImage();
+			return IO.brokenImage();
 		}
 
 		if(cache[index] != null) {
@@ -63,7 +58,7 @@ public final class Cache implements Runnable {
 			//} catch(InterruptedException e) {
 			//	Main.debug(e.toString());
 			//}
-			return loadingImage();
+			return IO.loadingImage();
 		}
 	}
 
@@ -92,21 +87,4 @@ public final class Cache implements Runnable {
 	}
 
 
-	BufferedImage _brokenImage;
-	static final int BROKEN_SIZE = 256;
-	BufferedImage brokenImage() {
-		if (_brokenImage != null) {
-			return _brokenImage;
-		}
-		_brokenImage = new BufferedImage(BROKEN_SIZE, BROKEN_SIZE, BufferedImage.TYPE_INT_RGB);
-		Graphics2D g = (Graphics2D)(_brokenImage.getGraphics());
-		g.setColor(Color.RED);
-		g.drawLine(0, 0, BROKEN_SIZE, BROKEN_SIZE);
-		g.drawLine(0, BROKEN_SIZE, BROKEN_SIZE, 0);
-		return _brokenImage;
-	}
-
-	BufferedImage loadingImage() {
-		return brokenImage();//TODO
-	}
 }
