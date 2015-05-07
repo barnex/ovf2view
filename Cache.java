@@ -5,11 +5,11 @@ import java.util.*;
 import java.util.concurrent.*;
 import javax.imageio.*;
 
-// Cache provides transparently cached access to the photo collection.
+// Cache provides transparently cached access to the image collection.
 public final class Cache implements Runnable {
 
 	static String[] extensions = new String[] {".jpeg", ".jpg"}; // extensions recognized by scan
-	File[] photos = new File[0];                                 // scanned photos from dir
+	File[] images = new File[0];                                 // scanned images from dir
 	BufferedImage[] cache;
 	ArrayBlockingQueue<Integer> requests = new ArrayBlockingQueue<Integer>(20);
 	Canvas canvas;
@@ -27,8 +27,8 @@ public final class Cache implements Runnable {
 					need = cache[index] == null;
 				}
 				if (need) {
-					Main.debug("load "+photos[index]);
-					BufferedImage img = ImageIO.read(photos[index]);
+					Main.debug("load "+images[index]);
+					BufferedImage img = ImageIO.read(images[index]);
 					synchronized(this) {
 						cache[index] = img;
 					}
@@ -42,13 +42,13 @@ public final class Cache implements Runnable {
 		}
 	}
 
-	// total number of available photos
+	// total number of available images
 	int len() {
-		return photos.length;
+		return images.length;
 	}
 
 	synchronized BufferedImage get(int index) {
-		if(index < 0 || index >= photos.length) {
+		if(index < 0 || index >= images.length) {
 			Main.debug("index "+index+" out of bounds");
 			return brokenImage();
 		}
@@ -57,9 +57,9 @@ public final class Cache implements Runnable {
 			return cache[index];
 		} else {
 			//try {
-			Main.debug("requesting photo #"+index);
+			Main.debug("requesting image #"+index);
 			boolean ok = requests.offer(new Integer(index));
-			Main.debug("requesting photo #"+index+":OK="+ok);
+			Main.debug("requesting image #"+index+":OK="+ok);
 			//} catch(InterruptedException e) {
 			//	Main.debug(e.toString());
 			//}
@@ -69,26 +69,26 @@ public final class Cache implements Runnable {
 
 
 
-	// Scans dir for photos
+	// Scans dir for images
 	void scan(File dir) {
 		File[] files = dir.listFiles();
 		if (files == null) {
-			this.photos = new File[0];
+			this.images = new File[0];
 		} else {
 			Arrays.sort(files);
-			ArrayList<File> photos = new ArrayList<File>();
+			ArrayList<File> images = new ArrayList<File>();
 			for (File f: files) {
 				String name = f.getName().toLowerCase();
 				for (String ext: extensions) {
 					if (name.endsWith(ext)) {
-						photos.add(f);
+						images.add(f);
 					}
 				}
 			}
-			this.photos = photos.toArray(this.photos);
+			this.images = images.toArray(this.images);
 		}
-		cache = new BufferedImage[photos.length];
-		Main.debug("scan "+ dir+": " + this.photos.length+ " photos");
+		cache = new BufferedImage[images.length];
+		Main.debug("scan "+ dir+": " + this.images.length+ " images");
 	}
 
 

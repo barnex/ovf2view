@@ -4,7 +4,7 @@ import java.awt.geom.*;
 import java.awt.image.*;
 import javax.swing.*;
 
-// Canvas displays the photo list.
+// Canvas displays the image list.
 final class Canvas extends JComponent {
 
 	int thumbsize = 256;
@@ -14,7 +14,7 @@ final class Canvas extends JComponent {
 	int nx, ny;                           // thumbnail grid size
 	Color background = Color.DARK_GRAY;   // background color
 	RenderingHints hints;                 // quality settings
-	Cache photos;
+	Cache images;
 
 	// New Canvas with directory to scan
 	Canvas() {
@@ -23,7 +23,7 @@ final class Canvas extends JComponent {
 		hints.put(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_DISABLE);
 		hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 		hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		photos = new Cache(this);
+		images = new Cache(this);
 		initEvents();
 	}
 
@@ -45,7 +45,7 @@ final class Canvas extends JComponent {
 	int scrollPos;
 
 	void scroll(int delta) {
-		if(photos.len() == 0 || nx == 0) {
+		if(images.len() == 0 || nx == 0) {
 			return;
 		}
 
@@ -55,8 +55,8 @@ final class Canvas extends JComponent {
 		if (scrollPos < 0) {
 			scrollPos = 0;
 		}
-		if(scrollPos >= photos.len()) {
-			scrollPos = photos.len() - 1;
+		if(scrollPos >= images.len()) {
+			scrollPos = images.len() - 1;
 		}
 		repaint();
 	}
@@ -85,11 +85,11 @@ final class Canvas extends JComponent {
 
 
 	int repaintCount;
-	Timer paintTimer = new Timer();
+	//Timer paintTimer = new Timer();
 
 	public void paintComponent(Graphics g_) {
 		repaintCount++;
-		Main.debug("start repaint #" + repaintCount);
+		long start = now();
 		sizesChanged();  // repaint may be called before resize event...
 
 		// reset graphics
@@ -110,19 +110,19 @@ final class Canvas extends JComponent {
 
 		for (int i=0; i<nx; i++) {
 			for(int j=0; j<ny; j++) {
-				int photo = (j+getScrollLine())*nx+i;
-				if(photo >= photos.len()) {
+				int image = (j+getScrollLine())*nx+i;
+				if(image >= images.len()) {
 					continue;
 				}
 				int x = i*W/nx+offx;
 				int y = j*H/ny+offy;
 				g.setTransform(AffineTransform.getTranslateInstance(x, y));
 				g.setClip(0, 0, thumbsize, thumbsize);
-				paintThumb(g, photo);
+				paintThumb(g, image);
 			}
 		}
 
-		Main.debug("done repaint #" + repaintCount);
+		Main.debug("repaint #" + repaintCount + ": " + since(start));
 
 		//zoomFit();
 		//if (this.image != null) {
@@ -131,9 +131,17 @@ final class Canvas extends JComponent {
 
 	}
 
-	void paintThumb(Graphics2D g, int photo) {
+	long now() {
+		return System.currentTimeMillis();
+	}
 
-		BufferedImage image = photos.get(photo);
+	String since(long start) {
+		return (now() - start) + "ms";
+	}
+
+	void paintThumb(Graphics2D g, int index) {
+
+		BufferedImage image = images.get(index);
 		double w = (double)(thumbsize);          // canvas size
 		double h = (double)(thumbsize);
 		double imw = (double)(image.getWidth());  // image size
