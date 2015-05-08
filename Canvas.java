@@ -9,14 +9,11 @@ final class Canvas extends JComponent {
 
 	int thumbsize = 256;
 	int border = 10;
-	static final int MIN_THUMB_SIZE = 32;
 	int W, H;                             // canvas size
 	Img[] files = new Img[0];
-	Cache cache;
 
 	// New Canvas with directory to scan
 	Canvas() {
-		cache = new Cache(this);
 		initEvents();
 	}
 
@@ -32,15 +29,18 @@ final class Canvas extends JComponent {
 
 	void zoom(int delta) {
 		if(delta > 0) {
-			thumbsize /= 2;
+			thumbsize -= Main.MIN_THUMB_SIZE;
 		}
 		if(delta < 0) {
-			thumbsize *= 2;
+			thumbsize += Main.MIN_THUMB_SIZE;
 		}
-		if(thumbsize < MIN_THUMB_SIZE) {
-			thumbsize = MIN_THUMB_SIZE;
+		if(thumbsize < Main.MIN_THUMB_SIZE) {
+			thumbsize = Main.MIN_THUMB_SIZE;
 		}
-		thumbsize = min(thumbsize, W, H);
+		if(thumbsize > Main.MAX_THUMB_SIZE) {
+			thumbsize = Main.MAX_THUMB_SIZE;
+		}
+		//thumbsize = min(thumbsize, W, H);
 		sizesChanged();
 		repaint();
 	}

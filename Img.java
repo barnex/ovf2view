@@ -5,7 +5,7 @@ import java.io.*;
 
 public final class Img {
 
-	private final File file;  // source file
+	final File file;  // source file
 	boolean loading;          // cache already started loading this image?
 	int w, h;                 // (full) image size, if known
 	BufferedImage full;       // full resolution, if available
@@ -15,14 +15,28 @@ public final class Img {
 		file = f;
 	}
 
-	// draw thumbnail
-	synchronized void drawThumb(Graphics2D g, int thumbsize) {
-		if(thumb == null) {
-			drawMissing(g, thumbsize);
-		} else {
-			drawImg(g, thumb, thumbsize);
+	void setImage(BufferedImage i) {
+		BufferedImage th = Render.scale(i, Main.MAX_THUMB_SIZE, Main.MAX_THUMB_SIZE);
+		synchronized(this) {
+			full = i;
+			thumb = th;
 		}
+	}
+
+	// draw thumbnail
+	void drawThumb(Graphics2D g, int thumbsize) {
 		drawFileName(g, thumbsize);
+
+		BufferedImage th;
+		synchronized(this) {
+			th = thumb;
+		}
+		if(th==null) {
+			drawMissing(g, thumbsize);
+			Main.worker.request(this);
+		} else {
+			drawImg(g, th, thumbsize);
+		}
 	}
 
 	// draw image, scale to thumbsize
@@ -66,5 +80,8 @@ public final class Img {
 		g.drawRect(0, 0, thumbsize, thumbsize);
 	}
 
+	public String toString() {
+		return file.toString();
+	}
 
 }

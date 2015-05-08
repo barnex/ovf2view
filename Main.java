@@ -9,6 +9,9 @@ public final class Main {
 	static Color background = Color.DARK_GRAY;
 	static Color foreground = Color.WHITE;
 	static JLabel statusLabel = new JLabel();
+	static final int MAX_THUMB_SIZE = 320;
+	static final int MIN_THUMB_SIZE = 32;
+	static Worker worker;
 
 	public static void main(String[] args) throws IOException {
 
@@ -32,6 +35,8 @@ public final class Main {
 		Canvas c = new Canvas();
 		c.setBackground(background);
 		c.scan(new File(dir));
+
+		worker = new Worker(c);
 
 		statusLabel.setOpaque(true);
 		statusLabel.setBackground(background);

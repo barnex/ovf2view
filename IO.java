@@ -47,8 +47,8 @@ public final class IO {
 		}
 		_brokenImage = new BufferedImage(BROKEN_SIZE, BROKEN_SIZE, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = (Graphics2D)(_brokenImage.getGraphics());
-		g.setColor(Color.WHITE);
-		g.drawRect(10, 10, BROKEN_SIZE-20, BROKEN_SIZE-20);
+		g.setColor(Color.RED);
+		g.fillRect(10, 10, BROKEN_SIZE-20, BROKEN_SIZE-20);
 		return _brokenImage;
 	}
 
