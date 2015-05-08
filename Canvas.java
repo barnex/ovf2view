@@ -1,7 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
-import java.awt.image.*;
 import java.io.*;
 import javax.swing.*;
 
@@ -12,10 +11,7 @@ final class Canvas extends JComponent {
 	int border = 10;
 	static final int MIN_THUMB_SIZE = 32;
 	int W, H;                             // canvas size
-
-	Color background = Color.DARK_GRAY;   // background color
-
-	File[] files = new File[0];
+	Img[] files = new Img[0];
 	Cache cache;
 
 	// New Canvas with directory to scan
@@ -24,8 +20,14 @@ final class Canvas extends JComponent {
 		initEvents();
 	}
 
+	// scan dir for displayable files,
+	// store in files.
 	void scan(File dir) {
-		files = IO.scan(dir);
+		File[] ls = IO.scan(dir);
+		files = new Img[ls.length];
+		for(int i=0; i<files.length; i++) {
+			files[i] = new Img(ls[i]);
+		}
 	}
 
 	void zoom(int delta) {
@@ -106,17 +108,22 @@ final class Canvas extends JComponent {
 	public void paintComponent(Graphics g_) {
 		repaintCount++;
 		long start = now();
+
+		Graphics2D g = (Graphics2D)(g_);
+
+		FontMetrics fm = g.getFontMetrics();
+		if(border <= fm.getAscent() + fm.getDescent()) {
+			border = fm.getAscent() + fm.getDescent() + 1;
+		}
+
 		sizesChanged();  // repaint may be called before resize event...
 
-		// reset graphics
-		Graphics2D g = (Graphics2D)(g_);
-		g.setClip(0, 0, W, H);
-
 		// clear background
-		g.setColor(background);
+		g.setColor(Main.background);
 		g.fillRect(0, 0, W, H);
 		g.setRenderingHints(Render.hints);
 
+		g.setColor(Main.foreground);
 
 		// center grid in frame
 		int stridex = W / nx();
@@ -126,15 +133,16 @@ final class Canvas extends JComponent {
 
 		for (int i=0; i<nx(); i++) {
 			for(int j=0; j<ny(); j++) {
-				int image = (j+getScrollLine())*nx()+i;
-				if(image >= nImg()) {
+				int index = (j+getScrollLine())*nx()+i;
+				if(index >= nImg()) {
 					continue;
 				}
 				int x = i*W/nx()+offx;
 				int y = j*H/ny()+offy;
 				g.setTransform(AffineTransform.getTranslateInstance(x, y));
-				//g.setClip(0, 0, thumbsize, thumbsize);
-				paintThumb(g, image);
+				g.setColor(Main.foreground);
+				g.setClip(0, 0, thumbsize+border, thumbsize+border);
+				files[index].drawThumb(g, thumbsize);
 			}
 		}
 
@@ -155,25 +163,6 @@ final class Canvas extends JComponent {
 		return (now() - start) + "ms";
 	}
 
-	void paintThumb(Graphics2D g, int index) {
-		BufferedImage image = cache.get(index);
-		double w = (double)(thumbsize);          // canvas size
-		double h = (double)(thumbsize);
-		double imw = (double)(image.getWidth());  // image size
-		double imh = (double)(image.getHeight());
-
-		double zx = w / imw;                      // zoom to fit
-		double zy = h / imh;
-		double zoom = (zx < zy? zx: zy);
-
-		double tx = (w - imw*zoom)/2;             // translate to center
-		double ty = (h - imh*zoom)/2;
-		AffineTransform transf = g.getTransform();
-		transf.translate(tx, ty);
-		transf.scale(zoom, zoom);
-		g.setTransform(transf);
-		g.drawImage(image, 0, 0,   null);
-	}
 
 	void initEvents() {
 		//getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "left");

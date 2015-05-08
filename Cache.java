@@ -17,24 +17,24 @@ public final class Cache implements Runnable {
 
 
 	public void run() {
-		for(;;) {
-			try {
-				int index = requests.take().intValue();
-				boolean need;
-				synchronized(this) {
-					need = cache[index] == null;
-				}
-				if (need) {
-					BufferedImage img = IO.load(canvas.files[index]);
-					synchronized(this) {
-						cache[index] = img;
-					}
-					canvas.repaint(); // TODO: repaint only if available image visible
-				}
-			} catch(InterruptedException e) {
-				Main.debug(e.toString());
-			}
-		}
+		//	for(;;) {
+		//		try {
+		//			int index = requests.take().intValue();
+		//			boolean need;
+		//			synchronized(this) {
+		//				need = cache[index] == null;
+		//			}
+		//			if (need) {
+		//				BufferedImage img = IO.load(canvas.files[index]);
+		//				synchronized(this) {
+		//					cache[index] = img;
+		//				}
+		//				canvas.repaint(); // TODO: repaint only if available image visible
+		//			}
+		//		} catch(InterruptedException e) {
+		//			Main.debug(e.toString());
+		//		}
+		//	}
 	}
 
 	// total number of available images
