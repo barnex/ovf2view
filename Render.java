@@ -17,8 +17,8 @@ public final class Render {
 
 		AffineTransform transf = AffineTransform.getScaleInstance(zoom, zoom);
 
-		int newW = (int)((double)(src.getWidth() * zoom));
-		int newH = (int)((double)(src.getHeight() * zoom));
+		int newW = (int)((double)(src.getWidth() * zoom)+0.5);
+		int newH = (int)((double)(src.getHeight() * zoom)+0.5);
 		BufferedImage dst = new BufferedImage(newW, newH, BufferedImage.TYPE_3BYTE_BGR);
 
 		Main.debug("re-scaling: "+ src.getWidth() + "x" +src.getHeight() + " * " + zoom + " = " + newW + "x" + newH);
