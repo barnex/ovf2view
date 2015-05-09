@@ -16,7 +16,7 @@ public final class Img {
 	}
 
 	void setImage(BufferedImage i) {
-		BufferedImage th = Render.scale(i, Main.MAX_THUMB_SIZE, Main.MAX_THUMB_SIZE);
+		BufferedImage th = Render.resize(i, Main.MAX_THUMB_SIZE, Main.MAX_THUMB_SIZE);
 		Main.debug(file + " thumb size: "+ th.getWidth()+ " x "+th.getHeight());
 		synchronized(this) {
 			full = i;

@@ -9,8 +9,8 @@ public final class Main {
 	static Color background = Color.DARK_GRAY;
 	static Color foreground = Color.WHITE;
 	static JLabel statusLabel = new JLabel();
-	static final int MAX_THUMB_SIZE = 320;
-	static final int MIN_THUMB_SIZE = 32;
+	static final int MAX_THUMB_SIZE = 480;
+	static final int MIN_THUMB_SIZE = 48;
 	static Worker worker;
 
 	public static void main(String[] args) throws IOException {

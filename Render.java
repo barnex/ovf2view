@@ -10,7 +10,7 @@ public final class Render {
 	}
 
 
-	static BufferedImage scale(BufferedImage src, int w, int h) {
+	static BufferedImage resize(BufferedImage src, int w, int h) {
 		double zx = (double)(w) / (double)(src.getWidth());
 		double zy = (double)(h) / (double)(src.getHeight());
 		double zoom = (zx < zy? zx: zy);
@@ -20,6 +20,8 @@ public final class Render {
 		int newW = (int)((double)(src.getWidth() * zoom));
 		int newH = (int)((double)(src.getHeight() * zoom));
 		BufferedImage dst = new BufferedImage(newW, newH, BufferedImage.TYPE_3BYTE_BGR);
+
+		Main.debug("re-scaling: "+ src.getWidth() + "x" +src.getHeight() + " * " + zoom + " = " + newW + "x" + newH);
 
 		Image smooth = src.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
 

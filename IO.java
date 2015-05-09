@@ -32,7 +32,7 @@ public final class IO {
 	static BufferedImage load(File file) {
 		Main.debug("thread " + Thread.currentThread().getId()+" loading "+file);
 		try {
-			return Render.scale(ImageIO.read(file), 256, 256);
+			return ImageIO.read(file);
 		} catch(Exception e) {
 			Main.debug(e.toString());
 			return brokenImage();
