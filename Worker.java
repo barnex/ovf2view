@@ -4,7 +4,7 @@ import java.util.concurrent.*;
 // Worker asynchronously loads images in the background
 public final class Worker implements Runnable {
 
-	static final int N_THREADS =  Runtime.getRuntime().availableProcessors() + 1;
+	static final int N_THREADS =  Runtime.getRuntime().availableProcessors();
 	ArrayBlockingQueue<Img> requests = new ArrayBlockingQueue<Img>(N_THREADS);
 	Canvas canvas;
 	boolean started;

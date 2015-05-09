@@ -21,10 +21,12 @@ public final class Render {
 		int newH = (int)((double)(src.getHeight() * zoom));
 		BufferedImage dst = new BufferedImage(newW, newH, BufferedImage.TYPE_3BYTE_BGR);
 
+		Image smooth = src.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
+
 		Graphics2D g = (Graphics2D)(dst.getGraphics());
 		g.setRenderingHints(hints);
-		g.setTransform(transf);
-		g.drawImage(src, 0, 0, null);
+		//g.setTransform(transf);
+		g.drawImage(smooth, 0, 0, null);
 		return dst;
 	}
 

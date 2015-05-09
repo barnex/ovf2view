@@ -41,6 +41,7 @@ final class Canvas extends JComponent {
 			thumbsize = Main.MAX_THUMB_SIZE;
 		}
 		//thumbsize = min(thumbsize, W, H);
+		Main.debug("thumbsize="+thumbsize);
 		sizesChanged();
 		repaint();
 	}
@@ -110,6 +111,7 @@ final class Canvas extends JComponent {
 		long start = now();
 
 		Graphics2D g = (Graphics2D)(g_);
+		g.setRenderingHints(Render.hints);
 
 		FontMetrics fm = g.getFontMetrics();
 		if(border <= fm.getAscent() + fm.getDescent()) {
@@ -121,7 +123,6 @@ final class Canvas extends JComponent {
 		// clear background
 		g.setColor(Main.background);
 		g.fillRect(0, 0, W, H);
-		g.setRenderingHints(Render.hints);
 
 		g.setColor(Main.foreground);
 

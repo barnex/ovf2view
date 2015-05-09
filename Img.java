@@ -17,6 +17,7 @@ public final class Img {
 
 	void setImage(BufferedImage i) {
 		BufferedImage th = Render.scale(i, Main.MAX_THUMB_SIZE, Main.MAX_THUMB_SIZE);
+		Main.debug(file + " thumb size: "+ th.getWidth()+ " x "+th.getHeight());
 		synchronized(this) {
 			full = i;
 			thumb = th;
@@ -49,6 +50,8 @@ public final class Img {
 		double zx = w / imw;                      // zoom to fit
 		double zy = h / imh;
 		double zoom = (zx < zy? zx: zy);
+
+		Main.debug("zoom="+zoom);
 
 		double tx = (w - imw*zoom)/2;             // translate to center
 		double ty = (h - imh*zoom)/2;
