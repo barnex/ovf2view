@@ -126,11 +126,7 @@ final class Canvas extends JComponent {
 
 		g.setColor(Main.foreground);
 
-		// center grid in frame
-		int stridex = W / nx();
-		int stridey = H / ny();
-		int offx = (stridex - (thumbsize+border)) / 2;
-		int offy = (stridey - (thumbsize+border)) / 2;
+		Point coord = new Point();
 
 		for (int i=0; i<nx(); i++) {
 			for(int j=0; j<ny(); j++) {
@@ -138,9 +134,8 @@ final class Canvas extends JComponent {
 				if(index >= nImg()) {
 					continue;
 				}
-				int x = i*W/nx()+offx;
-				int y = j*H/ny()+offy;
-				g.setTransform(AffineTransform.getTranslateInstance(x, y));
+				grid2coord(coord, i, j);
+				g.setTransform(AffineTransform.getTranslateInstance(coord.x, coord.y));
 				g.setColor(Main.foreground);
 				g.setClip(0, 0, thumbsize+border, thumbsize+border);
 				files[index].drawThumb(g, thumbsize);
@@ -154,6 +149,18 @@ final class Canvas extends JComponent {
 		//	g.drawImage(this.image, transf, null);
 		//}
 
+	}
+
+	void grid2coord(Point result, int i, int j) {
+		// center grid in frame
+		int stridex = W / nx();
+		int stridey = H / ny();
+		int offx = (stridex - (thumbsize+border)) / 2;
+		int offy = (stridey - (thumbsize+border)) / 2;
+		int x = i*W/nx()+offx;
+		int y = j*H/ny()+offy;
+		result.x = x;
+		result.y = y;
 	}
 
 	long now() {
@@ -188,7 +195,9 @@ final class Canvas extends JComponent {
 
 		});
 		addMouseMotionListener(new MouseMotionAdapter() {
+			public void mouseMoved(MouseEvent e) {
 
+			}
 		});
 		addMouseWheelListener(new MouseWheelListener() {
 			public void mouseWheelMoved(MouseWheelEvent e) {

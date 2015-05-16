@@ -1,6 +1,6 @@
 import java.awt.image.*;
 import java.awt.*;
-import java.awt.geom.*;
+//import java.awt.geom.*;
 
 public final class Render {
 
@@ -15,13 +15,13 @@ public final class Render {
 		double zy = (double)(h) / (double)(src.getHeight());
 		double zoom = (zx < zy? zx: zy);
 
-		AffineTransform transf = AffineTransform.getScaleInstance(zoom, zoom);
+		//AffineTransform transf = AffineTransform.getScaleInstance(zoom, zoom);
 
 		int newW = (int)((double)(src.getWidth() * zoom)+0.5);
 		int newH = (int)((double)(src.getHeight() * zoom)+0.5);
 		BufferedImage dst = new BufferedImage(newW, newH, BufferedImage.TYPE_3BYTE_BGR);
 
-		Main.debug("re-scaling: "+ src.getWidth() + "x" +src.getHeight() + " * " + zoom + " = " + newW + "x" + newH);
+		//Main.debug("re-scaling: "+ src.getWidth() + "x" +src.getHeight() + " * " + zoom + " = " + newW + "x" + newH);
 
 		Image smooth = src.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
 
