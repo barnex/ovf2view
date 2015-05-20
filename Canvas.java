@@ -105,6 +105,9 @@ final class Canvas extends JComponent {
 
 	int repaintCount;
 	//Timer paintTimer = new Timer();
+	//
+
+	int selection;
 
 	public void paintComponent(Graphics g_) {
 		repaintCount++;
@@ -124,6 +127,7 @@ final class Canvas extends JComponent {
 		g.setColor(Main.background);
 		g.fillRect(0, 0, W, H);
 
+
 		g.setColor(Main.foreground);
 
 		Point coord = new Point();
@@ -136,8 +140,10 @@ final class Canvas extends JComponent {
 				}
 				grid2coord(coord, i, j);
 				g.setTransform(AffineTransform.getTranslateInstance(coord.x, coord.y));
-				g.setColor(Main.foreground);
 				g.setClip(0, 0, thumbsize+border, thumbsize+border);
+				if(index == selection) {
+					drawSelection(g);
+				}
 				files[index].drawThumb(g, thumbsize);
 			}
 		}
@@ -148,9 +154,16 @@ final class Canvas extends JComponent {
 		//if (this.image != null) {
 		//	g.drawImage(this.image, transf, null);
 		//}
-
 	}
 
+	void drawSelection(Graphics2D g) {
+		g.setColor(Color.BLUE);
+		g.fillRect(0, 0, thumbsize+border, thumbsize+border);
+	}
+
+	// for thumbnail (i,j) in the thumbnail grid,
+	// return in result the screen coordinate of the thumbnail's
+	// top-left corner.
 	void grid2coord(Point result, int i, int j) {
 		// center grid in frame
 		int stridex = W / nx();
@@ -161,6 +174,23 @@ final class Canvas extends JComponent {
 		int y = j*H/ny()+offy;
 		result.x = x;
 		result.y = y;
+	}
+
+	// inverse of grid2coord:
+	// return the thumbnail where pixel (x,y) belongs to.
+	// Used to detect which thumbnail the mouse is on.
+	int coord2grid(int x, int y) {
+		int stridex = W / nx();
+		int stridey = H / ny();
+		int offx = (stridex - (thumbsize+border)) / 2;
+		int offy = (stridey - (thumbsize+border)) / 2;
+
+		int i = ((x-offx)*nx())/W;
+		int j = ((y-offy)*ny())/H;
+
+		int index = (j+getScrollLine())*nx()+i;
+
+		return index;
 	}
 
 	long now() {
@@ -196,7 +226,11 @@ final class Canvas extends JComponent {
 		});
 		addMouseMotionListener(new MouseMotionAdapter() {
 			public void mouseMoved(MouseEvent e) {
-
+				int sel = coord2grid(e.getX(), e.getY());
+				if(sel != selection) {
+					selection = sel;
+					repaint();
+				}
 			}
 		});
 		addMouseWheelListener(new MouseWheelListener() {
